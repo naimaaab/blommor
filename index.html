@@ -1,1 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title></title>
+<style>
+  :root{
+    /* Palett (håll den lågmäld & elegant) */
+    --bg1:#f8f9fb;
+    --bg2:#eef1f7;
+    --stem:#2c7a5b;
+    --leaf:#3d9b72;
 
+    --p1:#c9d7ff;   /* blå pastell */
+    --p2:#ffd9e3;   /* rosa pastell */
+    --p3:#ffe8b0;   /* gul pastell */
+    --p4:#d7f1e5;   /* grön pastell */
+    --center:#ffefbf;
+
+    --ink:#1f2a44;
+    --gold:#d4af37;
+  }
+
+  /* Baslayout */
+  html,body{height:100%;margin:0}
+  body{
+    background: radial-gradient(1400px 800px at 50% 0%, var(--bg1) 0%, var(--bg2) 60%, #e7ebf3 100%);
+    display:grid; place-items:center;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+  }
+  .frame{
+    width:min(92vw, 820px);
+    aspect-ratio: 16/9;
+    background:#ffffffcc;
+    backdrop-filter: blur(6px);
+    border-radius:24px;
+    box-shadow:0 24px 60px rgba(0,0,0,.12);
+    position:relative; overflow:hidden;
+  }
+
+  /* Diskret mark / horisont */
+  .ground{
+    position:absolute; inset:auto 0 0 0; height:34%;
+    background: linear-gradient(0deg, #f3fff8 0%, #eef8f4 70%, transparent 100%);
+    border-top:1px solid #e6efe9;
+  }
+
+  /* SVG fyller ytan */
+  svg{position:absolute; inset:0; width:100%; height:100%; display:block}
+
+  /* Petal startläge & bloom */
+  .petal{
+    transform-origin:center;
+    transform: scale(.05);
+    opacity: 0;
+    transition:
+      transform .85s cubic-bezier(.2,.7,.2,1),
+      opacity .6s ease;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.12));
+  }
+  .bloom .petal{ transform: scale(1); opacity: 1; }
+
+  /* Center */
+  .center{ filter: drop-shadow(0 1px 3px rgba(0,0,0,.10)); }
+
+  /* Stjälkar & blad */
+  .stem{ stroke:var(--stem); stroke-width:8; fill:none; stroke-linecap:round; filter: drop-shadow(0 2px 3px rgba(0,0,0,.08)); }
+  .leaf{ fill:var(--leaf); filter: drop-shadow(0 2px 3px rgba(0,0,0,.08)); }
+
+  /* När allt blommat: subtil svaj */
+  @keyframes sway {
+    0%,100% { transform: rotate(0deg); }
+    50%     { transform: rotate(1.2deg); }
+  }
+  .sway .bouquet{ animation: sway 4s ease-in-out infinite; transform-origin: 50% 80%; }
+
+  /* Hälsning (visas efter bloom) */
+  .note{
+    position:absolute; left:50%; top:14%;
+    transform: translate(-50%, -10px) scale(.98);
+    width:min(86%, 680px);
+    background:#ffffffee;
+    border:2px solid rgba(212,175,55,.45);
+    border-radius:16px;
+    padding:18px 20px;
+    text-align:center;
+    box-shadow:0 14px 40px rgba(0,0,0,.10);
+    opacity:0; pointer-events:none;
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .note.show{ opacity:1; transform: translate(-50%, 0) scale(1); }
+  .note p{ margin:0; font-size:clamp(16px,2.2vw,20px); letter-spacing:.01em; }
+
+  /* Konfetti – diskret */
+  .confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden }
+  .piece{
+    position:absolute; width:7px; height:12px; border-radius:2px;
+    opacity:.95;
+    animation: fall 2.8s linear forwards;
+  }
+  @keyframes fall{
+    to{ transform: translateY(115vh) rotate(520deg); opacity:0; }
+  }
+
+  /* Reset-knapp (liten, diskret) */
+  .ctrl{
+    position:absolute; top:10px; right:10px;
+    width:34px; height:34px; border-radius:50%;
+    background:#1f2a44; color:#fff; display:grid; place-items:center;
+    font-weight:700; font-size:13px;
+    opacity:.75; cursor:pointer; user-select:none;
+    box-shadow:0 10px 20px rgba(31,42,68,.25);
+  }
+  .ctrl:hover{ opacity:1 }
+  .ctrl:active{ transform: translateY(1px) }
+
+  /* Sol som sänker sig minimalistiskt */
+  .sun{
+    position:absolute; top:-140px; left:50%; transform:translateX(-50%);
+    width:160px; height:160px; border-radius:50%;
+    background: radial-gradient(circle at 40% 40%, #ffe8a8 0%, #ffd166 55%, #ffc04d 100%);
+    box-shadow:0 0 60px 18px #ffe9a6;
+    opacity:0; transition: top 1.8s ease, opacity 1.2s ease;
+  }
+  .sun.show{ top:10%; opacity:1; }
+
+  /* Rörelsepreferenser */
+  @media (prefers-reduced-motion: reduce){
+    .petal, .note, .sun{ transition: none; }
+    .sway .bouquet{ animation:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="frame" id="frame" aria-label="Interactive bouquet">
+    <div class="ground"></div>
+    <div class="sun" id="sun" aria-hidden="true"></div>
+    <div class="ctrl" id="reset" title="Reset">↺</div>
+
+    <!-- Hälsning som visas när allt blommat -->
+    <div class="note" id="note">
+      <p><em>Nobody or nothing will ever come between us</em></p>
+    </div>
+
+    <!-- Konfetti -->
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+    <!-- Minimalistisk, tecknad bukett (SVG) -->
+    <svg viewBox="0 0 1000 560" role="img" aria-label="Bouquet">
+      <g class="bouquet">
+        <!-- Stjälkar -->
+        <path class="stem" d="M290,520 C315,440 345,380 380,330"/>
+        <path class="stem" d="M450,520 C470,440 505,380 545,330"/>
+        <path class="stem" d="M610,520 C625,445 655,390 695,345"/>
+
+        <!-- Blad -->
+        <ellipse class="leaf" cx="360" cy="395" rx="28" ry="14" transform="rotate(-28 360 395)"/>
+        <ellipse class="leaf" cx="515" cy="405" rx="28" ry="14" transform="rotate(15 515 405)"/>
+        <ellipse class="leaf" cx="660" cy="380" rx="26" ry="13" transform="rotate(-12 660 380)"/>
+
+        <!-- Blomma vänster -->
+        <g transform="translate(380,310)">
+          <g class="petal" fill="var(--p1)">
+            <path d="M0,-58 C14,-58 24,-46 24,-34 C24,-16 10,-6 0,-6 C-10,-6 -24,-16 -24,-34 C-24,-46 -14,-58 0,-58Z"/>
+            <path d="M38,-14 C50,-14 60,-6 60,8 C60,22 50,30 38,30 C28,30 18,22 18,8 C18,-6 28,-14 38,-14Z"/>
+            <path d="M22,40 C32,40 42,48 42,60 C42,74 32,82 22,82 C10,82 2,74 2,60 C2,48 12,40 22,40Z"/>
+            <path d="M-22,40 C-12,40 -2,48 -2,60 C-2,74 -12,82 -22,82 C-34,82 -42,74 -42,60 C-42,48 -32,40 -22,40Z"/>
+            <path d="M-38,-14 C-26,-14 -16,-6 -16,8 C-16,22 -26,30 -38,30 C-50,30 -60,22 -60,8 C-60,-6 -50,-14 -38,-14Z"/>
+          </g>
+          <circle class="center" r="16" fill="var(--center)"/>
+        </g>
+
+        <!-- Blomma mitten -->
+        <g transform="translate(545,320)">
+          <g class="petal" fill="var(--p2)">
+            <path d="M0,-62 C16,-62 26,-50 26,-36 C26,-18 12,-8 0,-8 C-12,-8 -26,-18 -26,-36 C-26,-50 -16,-62 0,-62Z"/>
+            <path d="M40,-16 C52,-16 64,-6 64,8 C64,24 52,34 40,34 C28,34 18,24 18,8 C18,-6 28,-16 40,-16Z"/>
+            <path d="M24,42 C36,42 46,50 46,62 C46,78 36,88 24,88 C12,88 2,78 2,62 C2,50 12,42 24,42Z"/>
+            <path d="M-24,42 C-12,42 -2,50 -2,62 C-2,78 -12,88 -24,88 C-36,88 -46,78 -46,62 C-46,50 -36,42 -24,42Z"/>
+            <path d="M-40,-16 C-28,-16 -18,-6 -18,8 C-18,24 -28,34 -40,34 C-54,34 -64,24 -64,8 C-64,-6 -54,-16 -40,-16Z"/>
+          </g>
+          <circle class="center" r="18" fill="var(--center)"/>
+        </g>
+
+        <!-- Blomma höger -->
+        <g transform="translate(695,335)">
+          <g class="petal" fill="var(--p3)">
+            <path d="M0,-56 C14,-56 24,-46 24,-34 C24,-18 12,-8 0,-8 C-12,-8 -24,-18 -24,-34 C-24,-46 -14,-56 0,-56Z"/>
+            <path d="M36,-14 C48,-14 60,-4 60,10 C60,24 48,34 36,34 C24,34 14,24 14,10 C14,-4 24,-14 36,-14Z"/>
+            <path d="M22,40 C34,40 44,50 44,62 C44,76 34,86 22,86 C10,86 0,76 0,62 C0,50 10,40 22,40Z"/>
+            <path d="M-22,40 C-10,40 0,50 0,62 C0,76 -10,86 -22,86 C-36,86 -46,76 -46,62 C-46,50 -34,40 -22,40Z"/>
+            <path d="M-36,-14 C-24,-14 -12,-4 -12,10 C-12,24 -24,34 -36,34 C-48,34 -60,24 -60,10 C-60,-4 -48,-14 -36,-14Z"/>
+          </g>
+          <circle class="center" r="16" fill="var(--center)"/>
+        </g>
+
+        <!-- Små accentblommor -->
+        <g transform="translate(470,360)">
+          <g class="petal" fill="var(--p4)">
+            <circle cx="0" cy="-26" r="12"/>
+            <circle cx="20" cy="-4" r="12"/>
+            <circle cx="-20" cy="-4" r="12"/>
+            <circle cx="0" cy="18" r="12"/>
+          </g>
+          <circle class="center" r="8" fill="var(--center)"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+<script>
+  const frame = document.getElementById('frame');
+  const bouquet = document.querySelector('.bouquet');
+  const petals = [...document.querySelectorAll('.petal')];
+  const confetti = document.getElementById('confetti');
+  const note = document.getElementById('note');
+  const sun = document.getElementById('sun');
+  const resetBtn = document.getElementById('reset');
+
+  let bloomIndex = 0;
+  let finished = false;
+
+  function makeConfetti(n=70){
+    const colors = ['#c9d7ff','#ffd9e3','#ffe8b0','#d7f1e5','#3d9b72','#2c7a5b'];
+    for(let i=0;i<n;i++){
+      const el = document.createElement('div');
+      el.className = 'piece';
+      el.style.left = Math.random()*100 + 'vw';
+      el.style.top = '-8vh';
+      el.style.background = colors[Math.floor(Math.random()*colors.length)];
+      el.style.transform = `translateY(0) rotate(${Math.random()*180}deg)`;
+      el.style.animationDelay = (Math.random()*0.7)+'s';
+      confetti.appendChild(el);
+      setTimeout(()=>el.remove(), 3000);
+    }
+  }
+
+  function next(){
+    if(finished) { makeConfetti(70); return; }
+
+    if(bloomIndex < petals.length){
+      petals[bloomIndex].parentNode.classList.add('bloom'); // blomma per ”grupp”
+      bloomIndex++;
+      if(bloomIndex === petals.length){
+        // när sista petal-gruppen triggas: aktivera svaj, sol, hälsning
+        frame.classList.add('sway');
+        setTimeout(()=> sun.classList.add('show'), 400);
+        setTimeout(()=> note.classList.add('show'), 900);
+        setTimeout(()=> { finished = true; makeConfetti(70); }, 1400);
+      }
+      return;
+    }
+  }
+
+  function resetAll(){
+    petals.forEach(p => p.parentNode.classList.remove('bloom'));
+    frame.classList.remove('sway');
+    sun.classList.remove('show');
+    note.classList.remove('show');
+    finished = false;
+    bloomIndex = 0;
+  }
+
+  frame.addEventListener('click', next);
+  resetBtn.addEventListener('click', (e)=>{ e.stopPropagation(); resetAll(); });
+
+  // Tillgänglighet – Enter/Space
+  frame.tabIndex = 0;
+  frame.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); next(); }
+    if(e.key.toLowerCase() === 'r'){ resetAll(); }
+  });
+</script>
+</body>
+</html>
