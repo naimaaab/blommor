@@ -57,12 +57,12 @@
 .note{
   position:absolute; 
   left:50%; 
-  top:14%;
+  top:22%;                /* lite längre ner också */
   transform: translate(-50%, -10px) scale(.98);
-  width:320px; 
-  height:280px;
+  width:400px;            /* större hjärta */
+  height:350px;           /* högre hjärta */
   background:#fff0f5;
-  clip-path: path("M160 280 C 160 240, 50 180, 50 110 A 55 55 0 0 1 160 110 A 55 55 0 0 1 270 110 C 270 180, 160 240, 160 280 Z");
+  clip-path: path("M200 350 C 200 290, 60 220, 60 140 A 70 70 0 0 1 200 140 A 70 70 0 0 1 340 140 C 340 220, 200 290, 200 350 Z");
   border:2px solid rgba(212,175,55,.6);
   box-shadow:0 14px 40px rgba(0,0,0,.15);
   display:flex; align-items:center; justify-content:center;
@@ -70,17 +70,17 @@
   text-align:center;
   opacity:0;
   transition: opacity .6s ease, transform .6s ease;
-  z-index: 5;              /* 🔑 detta lyfter fram hjärtat */
+  z-index: 5;
 }
-
 .note.show{ opacity:1; transform: translate(-50%, 0) scale(1); }
 .note p{
   margin:0;
-  font-size:clamp(12px, 1.8vw, 18px); /* anpassar sig men max 18px */
+  font-size:clamp(14px, 2vw, 20px); /* lite mindre */
   color:#8b1e3f;
   font-weight:600;
-  line-height:1.3; /* bättre radavstånd */
+  line-height:1.4;
 }
+
 
   /* Konfetti */
   .confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden }
