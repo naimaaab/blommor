@@ -55,9 +55,12 @@
 
 /* Hjärtformat meddelande */
 .note{
-  position:absolute; left:50%; top:14%;
+  position:absolute; 
+  left:50%; 
+  top:14%;
   transform: translate(-50%, -10px) scale(.98);
-  width:320px; height:280px;   /* större hjärta */
+  width:320px; 
+  height:280px;
   background:#fff0f5;
   clip-path: path("M160 280 C 160 240, 50 180, 50 110 A 55 55 0 0 1 160 110 A 55 55 0 0 1 270 110 C 270 180, 160 240, 160 280 Z");
   border:2px solid rgba(212,175,55,.6);
@@ -67,7 +70,9 @@
   text-align:center;
   opacity:0;
   transition: opacity .6s ease, transform .6s ease;
+  z-index: 5;              /* 🔑 detta lyfter fram hjärtat */
 }
+
 .note.show{ opacity:1; transform: translate(-50%, 0) scale(1); }
 .note p{
   margin:0;
