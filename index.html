@@ -75,11 +75,19 @@
 .note.show{ opacity:1; transform: translate(-50%, 0) scale(1); }
 .note p{
   margin:0;
-  font-size:clamp(14px, 2vw, 20px); /* lite mindre */
+  font-size:clamp(14px, 2vw, 20px);
   color:#8b1e3f;
   font-weight:600;
   line-height:1.4;
 }
+.note p .highlight{
+  display:block;
+  font-size:clamp(20px, 3vw, 28px); /* större text på sista raden */
+  font-weight:700;
+  color:#8b1e3f;
+  margin-top:6px;
+}
+
 
 
   /* Konfetti */
@@ -122,8 +130,15 @@
 
     <!-- Hjärtformat meddelande -->
 <div class="note" id="note">
-  <p><em>Nobody or nothing<br/>will ever come between us</em></p>
+  <p>
+    <em>
+      Nobody or nothing<br/>
+      will ever come between<br/>
+      <span class="highlight">us ❤️</span>
+    </em>
+  </p>
 </div>
+
 
 
     <div class="confetti" id="confetti"></div>
